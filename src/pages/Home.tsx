@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   Search, Zap, Clock, ExternalLink, ChevronDown, ChevronUp,
-  Globe, Eye, EyeOff, Copy, Check, AlertCircle, X,
+  Globe, Eye, EyeOff, Copy, Check, AlertCircle, X, Linkedin,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -222,9 +222,9 @@ function ResultCard({ result, onRemove }: { result: SearchResult; onRemove: () =
         </div>
         {/* Stats */}
         <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
-          <StatPill icon={<Zap size={12} />} color="var(--query-color)" label={`${result.fanoutQueries.length} fan-out quer${result.fanoutQueries.length === 1 ? 'y' : 'ies'}`} />
-          <StatPill icon={<Globe size={12} />} color="var(--source-color)" label={`${result.sources.length} source${result.sources.length !== 1 ? 's' : ''}`} />
-          <StatPill icon={<Search size={12} />} color="var(--count-color)" label={`${result.searchCount} search call${result.searchCount !== 1 ? 's' : ''}`} />
+          <StatPill icon={<Zap size={12} />} color="var(--query-color)" label={`${result.fanoutQueries.length} fan-out quer${result.fanoutQueries.length === 1 ? 'y' : 'ies'}`} tooltip="Fan-out queries are the individual search terms ChatGPT secretly fires behind the scenes to research your prompt. One prompt can trigger many parallel searches." />
+          <StatPill icon={<Globe size={12} />} color="var(--source-color)" label={`${result.sources.length} source${result.sources.length !== 1 ? 's' : ''}`} tooltip="The web pages ChatGPT actually read and used as sources when composing its answer." />
+          <StatPill icon={<Search size={12} />} color="var(--count-color)" label={`${result.searchCount} search call${result.searchCount !== 1 ? 's' : ''}`} tooltip="The number of times ChatGPT called the web search tool. A single call can contain multiple fan-out queries executed in parallel." />
         </div>
       </div>
 
@@ -273,12 +273,48 @@ function ResultCard({ result, onRemove }: { result: SearchResult; onRemove: () =
   );
 }
 
-function StatPill({ icon, color, label }: { icon: React.ReactNode; color: string; label: string }) {
+function Tooltip({ text, children }: { text: string; children: React.ReactNode }) {
+  const [visible, setVisible] = useState(false);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, color }}>
-      {icon}
-      <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
+    <div style={{ position: 'relative', display: 'inline-flex' }}
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      {children}
+      {visible && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#1c2128', border: '1px solid var(--border)',
+          borderRadius: 6, padding: '6px 10px',
+          fontSize: 11, lineHeight: 1.5, color: 'var(--fg)',
+          whiteSpace: 'nowrap', maxWidth: 240, whiteSpace: 'normal',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          zIndex: 10, pointerEvents: 'none',
+          textAlign: 'center',
+        } as React.CSSProperties}>
+          {text}
+          <div style={{
+            position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+            width: 0, height: 0,
+            borderLeft: '5px solid transparent',
+            borderRight: '5px solid transparent',
+            borderTop: '5px solid var(--border)',
+          }} />
+        </div>
+      )}
     </div>
+  );
+}
+
+function StatPill({ icon, color, label, tooltip }: { icon: React.ReactNode; color: string; label: string; tooltip: string }) {
+  return (
+    <Tooltip text={tooltip}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, color, cursor: 'default' }}>
+        {icon}
+        <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
+      </div>
+    </Tooltip>
   );
 }
 
@@ -374,7 +410,7 @@ export default function Home() {
           <div style={{ padding: '18px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
             <Logo />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>Fan-Out</div>
+              <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>ChatGPT Fan Out</div>
               <div style={{ fontSize: 11, color: 'var(--fg-muted)' }}>Query Explorer</div>
             </div>
           </div>
@@ -402,8 +438,28 @@ export default function Home() {
             }
           </div>
 
-          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.5 }}>
-            Calls <span style={{ color: 'var(--accent)' }}>OpenAI Responses API</span> with <span className="mono">web_search</span> tool directly from your browser.
+          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.6 }}>
+            <div>Calls <span style={{ color: 'var(--accent)' }}>OpenAI Responses API</span> with <span className="mono">web_search</span> tool directly from your browser.</div>
+            <div style={{ marginTop: 8, display: 'flex', gap: 10 }}>
+              <a href="https://www.linkedin.com/in/markseo/" target="_blank" rel="noopener noreferrer"
+                style={{ color: 'var(--fg-subtle)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg)')}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg-subtle)')}
+              ><Linkedin size={11} /> LinkedIn</a>
+              <a href="https://bsky.app/profile/markwilliamscook.com" target="_blank" rel="noopener noreferrer"
+                style={{ color: 'var(--fg-subtle)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg)')}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg-subtle)')}
+              >
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.204-.659-.299-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/></svg>
+                Bluesky
+              </a>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <a href="https://coreupdates.com" target="_blank" rel="noopener noreferrer"
+                style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}
+              >CoreUpdates.com</a> newsletter
+            </div>
           </div>
         </aside>
 
@@ -417,8 +473,8 @@ export default function Home() {
           }} className="mobile-header">
             <Logo />
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>Fan-Out Explorer</div>
-              <div style={{ fontSize: 11, color: 'var(--fg-muted)' }}>Query Inspector</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>ChatGPT Fan Out Explorer</div>
+              <div style={{ fontSize: 11, color: 'var(--fg-muted)' }}>by <a href="https://withcandour.co.uk" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Candour</a></div>
             </div>
           </header>
 
@@ -426,52 +482,83 @@ export default function Home() {
 
             {/* Desktop title */}
             <div className="desktop-title" style={{ marginBottom: 28 }}>
-              <h1 style={{ fontSize: 20, fontWeight: 600 }}>Fan-Out Query Explorer</h1>
+              <h1 style={{ fontSize: 20, fontWeight: 600 }}>ChatGPT Fan Out Query Explorer</h1>
               <p style={{ fontSize: 13, color: 'var(--fg-muted)', marginTop: 4 }}>
                 See exactly which search queries ChatGPT fires behind the scenes via the Responses API.
               </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>
+                  by <a href="https://withcandour.co.uk" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Candour</a>'s Mark Williams-Cook
+                </span>
+                <span style={{ color: 'var(--border)', fontSize: 12 }}>·</span>
+                <a href="https://www.linkedin.com/in/markseo/" target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--fg-subtle)', textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg)')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg-subtle)')}
+                >
+                  <Linkedin size={13} /> LinkedIn
+                </a>
+                <a href="https://bsky.app/profile/markwilliamscook.com" target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--fg-subtle)', textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg)')}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'var(--fg-subtle)')}
+                >
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.204-.659-.299-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/></svg>
+                  Bluesky
+                </a>
+              </div>
             </div>
 
             {/* ── Form ──────────────────────────────────────────────────── */}
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
 
               {/* API key + model row */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <input
-                    type={showKey ? 'text' : 'password'}
-                    placeholder="sk-…  OpenAI API key"
-                    value={apiKey}
-                    onChange={e => setApiKey(e.target.value)}
-                    autoComplete="off"
-                    spellCheck={false}
+              <div>
+                <div style={{ marginBottom: 5 }}>
+                  <label style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>
+                    OpenAI API key —{' '}
+                    <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer"
+                      style={{ color: 'var(--accent)', textDecoration: 'none' }}
+                    >get one here</a>
+                  </label>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <input
+                      type={showKey ? 'text' : 'password'}
+                      placeholder="sk-…  OpenAI API key"
+                      value={apiKey}
+                      onChange={e => setApiKey(e.target.value)}
+                      autoComplete="off"
+                      spellCheck={false}
+                      style={{
+                        width: '100%', height: 38, padding: '0 36px 0 12px',
+                        background: 'var(--bg-input)', border: '1px solid var(--border)',
+                        borderRadius: 6, color: 'var(--fg)', fontSize: 13,
+                        fontFamily: 'var(--font-mono)',
+                        outline: 'none', transition: 'border-color 0.15s',
+                      }}
+                      onFocus={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
+                      onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+                    />
+                    <button type="button" onClick={() => setShowKey(v => !v)} aria-label={showKey ? 'Hide key' : 'Show key'}
+                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--fg-subtle)', display: 'flex', padding: 0 }}>
+                      {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                  <select value={model} onChange={e => setModel(e.target.value)}
                     style={{
-                      width: '100%', height: 38, padding: '0 36px 0 12px',
-                      background: 'var(--bg-input)', border: '1px solid var(--border)',
-                      borderRadius: 6, color: 'var(--fg)', fontSize: 13,
-                      fontFamily: 'var(--font-mono)',
-                      outline: 'none', transition: 'border-color 0.15s',
+                      height: 38, padding: '0 10px', background: 'var(--bg-input)',
+                      border: '1px solid var(--border)', borderRadius: 6,
+                      color: 'var(--fg)', fontSize: 13, fontFamily: 'var(--font-mono)',
+                      outline: 'none', cursor: 'pointer',
                     }}
                     onFocus={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
                     onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
-                  />
-                  <button type="button" onClick={() => setShowKey(v => !v)} aria-label={showKey ? 'Hide key' : 'Show key'}
-                    style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--fg-subtle)', display: 'flex', padding: 0 }}>
-                    {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
+                  >
+                    {MODELS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                  </select>
                 </div>
-                <select value={model} onChange={e => setModel(e.target.value)}
-                  style={{
-                    height: 38, padding: '0 10px', background: 'var(--bg-input)',
-                    border: '1px solid var(--border)', borderRadius: 6,
-                    color: 'var(--fg)', fontSize: 13, fontFamily: 'var(--font-mono)',
-                    outline: 'none', cursor: 'pointer',
-                  }}
-                  onFocus={e => (e.currentTarget.style.borderColor = 'var(--accent)')}
-                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
-                >
-                  {MODELS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                </select>
               </div>
 
               {/* Prompt textarea */}
@@ -494,6 +581,20 @@ export default function Home() {
                   onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSubmit(); } }}
                 />
+              </div>
+
+              {/* Newsletter ad */}
+              <div style={{
+                padding: '12px 14px', borderRadius: 8,
+                background: 'rgba(45,156,219,0.07)', border: '1px solid rgba(45,156,219,0.2)',
+                fontSize: 13, lineHeight: 1.5,
+              }}>
+                <span style={{ color: 'var(--fg-muted)' }}>
+                  Want free SEO tools, tips, and news? Join 13,000 other SEOs and sign up to the{' '}
+                  <a href="https://coreupdates.com" target="_blank" rel="noopener noreferrer"
+                    style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}
+                  >CoreUpdates.com newsletter</a>.
+                </span>
               </div>
 
               {/* Bottom row */}
